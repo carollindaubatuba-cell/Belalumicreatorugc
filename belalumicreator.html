@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belalumi Creator Studio — UGC Portfolio & Media Kit Builder</title>
+<meta name="description" content="Design your UGC creator portfolio and media kit. Edit, preview, save locally, export as HTML or PDF.">
+<style>
+:root{
+  --cream:#FBF6F0; --cream-2:#F5EDE3; --blush:#F6E3E0; --blush-2:#EFCFCB; --rose:#C98A92; --rose-deep:#97495A;
+  --ink:#2B2625; --ink-2:#5E5552; --line:#E8DCD2; --white:#fff; --ok:#3F7A5B; --err:#B3363F;
+  --shadow:0 1px 2px rgba(43,38,37,.05),0 8px 24px rgba(43,38,37,.06);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--rose-deep);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:8px 14px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+
+/* App shell */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 20px;background:var(--white);border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;line-height:1.1;margin-right:auto}
+.brand b{font-family:var(--serif);font-size:1.25rem;letter-spacing:.01em}
+.brand span{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--rose-deep)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font-size:.8rem;color:var(--ink-2);min-width:110px;text-align:right}
+.status.err{color:var(--err);font-weight:600}
+.btn{border:1px solid var(--line);background:var(--white);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:.88rem;font-weight:550;transition:background .15s,border-color .15s,transform .05s}
+.btn:hover{background:var(--cream-2);border-color:var(--blush-2)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#443c3a}
+.btn.rose{background:var(--rose-deep);border-color:var(--rose-deep);color:#fff}
+.btn.rose:hover{background:#823e4d}
+.btn.danger{color:var(--err);border-color:#e9c4c7}
+.btn.sm{padding:5px 10px;font-size:.78rem}
+.btn.icon{padding:5px 9px;min-width:32px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+
+.workspace{flex:1;min-height:0;display:grid;grid-template-columns:minmax(340px,440px) 1fr}
+.editor,.preview-wrap{min-width:0}
+.editor{display:flex;flex-direction:column;min-height:0;background:var(--cream);border-right:1px solid var(--line)}
+.tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--line);overflow-x:auto;background:var(--white)}
+.tab{border:0;background:none;padding:9px 12px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:600;font-size:.86rem;color:var(--ink-2);white-space:nowrap;border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--rose-deep);background:var(--cream)}
+.panel{flex:1;overflow:auto;padding:18px 18px 60px}
+.panel[hidden]{display:none}
+.panel h2{font-size:1.25rem;margin-bottom:4px}
+.panel .lead{color:var(--ink-2);font-size:.88rem;margin:0 0 16px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h3{font-size:1rem;margin-bottom:10px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:.8rem;font-weight:650;color:var(--ink)}
+.field .hint{font-size:.75rem;color:var(--ink-2)}
+.field input[type=text],.field input[type=email],.field input[type=url],.field textarea,.field select{width:100%;border:1px solid var(--line);background:var(--cream);border-radius:10px;padding:9px 11px;min-height:40px}
+.field textarea{min-height:84px;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus{background:#fff;border-color:var(--rose)}
+.field [aria-invalid="true"]{border-color:var(--err);background:#fff6f6}
+.field .error{color:var(--err);font-size:.76rem;min-height:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.avatar-row{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.avatar{width:84px;height:84px;border-radius:50%;background:var(--blush);border:2px solid var(--white);box-shadow:var(--shadow);object-fit:cover;display:grid;place-items:center;font-family:var(--serif);font-size:1.8rem;color:var(--rose-deep);overflow:hidden;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.item{border:1px solid var(--line);border-radius:14px;background:var(--cream);margin-bottom:10px;overflow:hidden}
+.item-head{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--white);border-bottom:1px solid var(--line)}
+.item-title{flex:1;font-weight:650;font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-body{padding:12px 12px 2px}
+.empty{border:1.5px dashed var(--blush-2);border-radius:14px;padding:18px;text-align:center;color:var(--ink-2);background:var(--white);font-size:.88rem;margin-bottom:10px}
+.empty b{display:block;color:var(--ink);font-family:var(--serif);font-size:1.02rem;margin-bottom:2px}
+.sec-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--white);margin-bottom:8px}
+.sec-row .name{flex:1;font-weight:600;font-size:.9rem}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-2);cursor:pointer}
+.switch input{width:18px;height:18px;accent-color:var(--rose-deep)}
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.theme-opt{border:2px solid var(--line);border-radius:14px;padding:8px;background:var(--white);cursor:pointer;text-align:left}
+.theme-opt[aria-pressed="true"]{border-color:var(--rose-deep);box-shadow:0 0 0 3px rgba(151,73,90,.15)}
+.theme-opt .sw{height:54px;border-radius:9px;margin-bottom:6px;display:flex;align-items:flex-end;padding:6px;font-family:var(--serif);font-size:.85rem}
+.theme-opt span.n{font-size:.76rem;font-weight:650;display:block}
+.accent-row{display:flex;gap:10px;flex-wrap:wrap}
+.accent{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.accent[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
+.notice{background:var(--blush);border-radius:12px;padding:12px 14px;font-size:.84rem;color:#4b3c3a;margin-bottom:14px;border:1px solid var(--blush-2)}
+.notice b{color:var(--rose-deep)}
+.btn-col{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+
+/* Preview */
+.preview-wrap{display:flex;flex-direction:column;min-height:0;background:var(--cream-2)}
+.preview-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--white);flex-wrap:wrap}
+.preview-bar .lbl{font-weight:650;font-size:.85rem;margin-right:auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--white);padding:6px 12px;font-size:.78rem;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.preview-stage{flex:1;min-height:0;overflow:auto;padding:18px;display:flex;justify-content:center}
+.frame-shell{width:100%;max-width:100%;transition:width .2s;background:#fff;border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line);align-self:flex-start;height:100%;min-height:480px}
+.frame-shell.tablet{width:768px}
+.frame-shell.mobile{width:390px}
+#previewFrame{width:100%;height:100%;border:0;display:block;background:#fff}
+.mobile-switch{display:none}
+
+/* Dialogs */
+dialog{border:0;border-radius:20px;padding:0;max-width:min(560px,92vw);width:100%;box-shadow:0 20px 60px rgba(43,38,37,.3);color:var(--ink);background:var(--cream)}
+dialog::backdrop{background:rgba(43,38,37,.45)}
+.dlg{padding:24px}
+.dlg h2{font-size:1.5rem;margin-bottom:6px}
+.dlg p{margin:0 0 12px;color:var(--ink-2);font-size:.92rem}
+.dlg ol{padding-left:20px;margin:0 0 14px;font-size:.9rem}
+.dlg li{margin-bottom:8px}
+.dlg .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:.86rem;opacity:0;pointer-events:none;transition:.25s;z-index:200;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--err)}
+
+@media (max-width:1020px){
+  .workspace{grid-template-columns:minmax(0,1fr)}
+  .mobile-switch{display:inline-flex}
+  .workspace[data-view="edit"] .preview-wrap{display:none}
+  .workspace[data-view="preview"] .editor{display:none}
+  .editor{border-right:0}
+  .frame-shell.tablet,.frame-shell.mobile{width:100%}
+  .topbar{padding:8px 12px}
+  .status{display:none}
+  .seg{display:none}
+}
+@media (max-width:560px){
+  .row2{grid-template-columns:1fr}
+  .theme-grid{grid-template-columns:1fr}
+  .btn{padding:7px 11px}
+  .actions .btn .t{display:none}
+}
+@media print{ .app,.toast,dialog{display:none!important} body::before{content:'Use the Print / Save PDF button inside Belalumi Creator Studio to print your portfolio.';display:block;padding:24px;font-family:sans-serif} }
+</style>
+</head>
+<body>
+<a class="skip" href="#editorPanels">Skip to editor</a>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><b>Belalumi Creator Studio</b><span>Portfolio &amp; Media Kit Builder</span></div>
+    <div class="status" id="saveStatus" role="status" aria-live="polite">Not saved yet</div>
+    <div class="actions" role="toolbar" aria-label="Project actions">
+      <button class="btn mobile-switch" id="viewToggle" type="button">Preview</button>
+      <button class="btn" id="btnHelp" type="button" aria-haspopup="dialog">Help</button>
+      <button class="btn" id="btnBackup" type="button" title="Download a JSON backup of your project">Backup <span class="t">(JSON)</span></button>
+      <button class="btn" id="btnImport" type="button" title="Restore a project from a JSON backup">Import</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn" id="btnPrint" type="button" title="Opens the print dialog — choose Save as PDF">Print / PDF</button>
+      <button class="btn primary" id="btnExportHtml" type="button" title="Download a standalone HTML portfolio file">Export HTML</button>
+    </div>
+  </header>
+
+  <div class="workspace" id="workspace" data-view="edit">
+    <section class="editor" aria-label="Editor">
+      <div class="tabs" role="tablist" aria-label="Editor sections" id="tabList">
+        <button class="tab" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="true">Profile</button>
+        <button class="tab" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="false" tabindex="-1">Content</button>
+        <button class="tab" role="tab" id="tab-sections" aria-controls="panel-sections" aria-selected="false" tabindex="-1">Sections</button>
+        <button class="tab" role="tab" id="tab-style" aria-controls="panel-style" aria-selected="false" tabindex="-1">Style</button>
+        <button class="tab" role="tab" id="tab-project" aria-controls="panel-project" aria-selected="false" tabindex="-1">Project</button>
+      </div>
+      <div id="editorPanels" style="display:contents">
+        <div class="panel" role="tabpanel" id="panel-profile" aria-labelledby="tab-profile" tabindex="0"></div>
+        <div class="panel" role="tabpanel" id="panel-content" aria-labelledby="tab-content" tabindex="0" hidden></div>
+        <div class="panel" role="tabpanel" id="panel-sections" aria-labelledby="tab-sections" tabindex="0" hidden></div>
+        <div class="panel" role="tabpanel" id="panel-style" aria-labelledby="tab-style" tabindex="0" hidden></div>
+        <div class="panel" role="tabpanel" id="panel-project" aria-labelledby="tab-project" tabindex="0" hidden></div>
+      </div>
+    </section>
+
+    <section class="preview-wrap" aria-label="Live portfolio preview">
+      <div class="preview-bar">
+        <span class="lbl">Live preview</span>
+        <div class="seg" role="group" aria-label="Preview width">
+          <button type="button" data-dev="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" data-dev="tablet" aria-pressed="false">Tablet</button>
+          <button type="button" data-dev="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="preview-stage">
+        <div class="frame-shell" id="frameShell">
+          <iframe id="previewFrame" title="Portfolio preview"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog id="dlgWelcome" aria-labelledby="welcomeTitle">
+  <div class="dlg">
+    <h2 id="welcomeTitle">Welcome to Belalumi Creator Studio</h2>
+    <p>Build a polished UGC portfolio and media kit in a few minutes. Sample content is loaded so you can see how everything looks — replace it with yours.</p>
+    <ol>
+      <li><b>Profile</b> — add your name, photo, bio, niche, location and links.</li>
+      <li><b>Content</b> — add UGC video examples, collaborations, testimonials, audience stats and rates.</li>
+      <li><b>Sections &amp; Style</b> — reorder or hide sections and pick a theme. The preview updates instantly.</li>
+      <li><b>Export</b> — download a standalone HTML portfolio, or use Print / PDF and choose “Save as PDF”.</li>
+    </ol>
+    <div class="notice"><b>Your data stays in this browser.</b> Everything is saved locally on this device only — there are no accounts and nothing is uploaded. Clearing your browser data will erase it, so download a <b>Backup (JSON)</b> regularly and keep it somewhere safe.</div>
+    <div class="foot"><button class="btn rose" id="welcomeClose" type="button">Start building</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlgConfirm" aria-labelledby="confirmTitle">
+  <form method="dialog" class="dlg">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmMsg"></p>
+    <div class="foot">
+      <button class="btn" value="cancel" id="confirmCancel">Cancel</button>
+      <button class="btn danger" value="ok" id="confirmOk">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+/* ============ Constants & helpers ============ */
+var STORE_KEY='belalumi.creatorStudio.v1';
+var WELCOME_KEY='belalumi.creatorStudio.welcomed';
+var APP_ID='belalumi-creator-studio';
+var MAX_ITEMS=30;
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var uid=function(){return Math.random().toString(36).slice(2,10)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var clip=function(v,n){return (typeof v==='string'?v:(v==null?'':String(v))).slice(0,n)};
+
+var THEMES=[
+  {id:'cream',name:'Minimalist Cream',bg:'#FBF6F0',fg:'#2B2625',ac:'#97495A'},
+  {id:'blush',name:'Blush Creator',bg:'#F6E3E0',fg:'#4A2F35',ac:'#A8566A'},
+  {id:'editorial',name:'Bold Editorial',bg:'#2B2625',fg:'#FBF6F0',ac:'#F2B8C0'}
+];
+var ACCENTS=[
+  {id:'theme',name:'Theme default',color:null},
+  {id:'rose',name:'Deep rose',color:'#97495A'},
+  {id:'mauve',name:'Mauve',color:'#7A5C7E'},
+  {id:'terracotta',name:'Terracotta',color:'#A9533C'},
+  {id:'sage',name:'Sage',color:'#4F6F5A'},
+  {id:'charcoal',name:'Charcoal',color:'#2B2625'}
+];
+var SECTION_DEFS={
+  intro:{title:'About me'},
+  videos:{title:'UGC video examples'},
+  collabs:{title:'Previous collaborations'},
+  testimonials:{title:'Testimonials'},
+  stats:{title:'Audience statistics'},
+  rates:{title:'Rates'},
+  contact:{title:'Let’s work together'}
+};
+var SECTION_KEYS=['intro','videos','collabs','testimonials','stats','rates','contact'];
+
+/* List schemas drive both the editor and the sanitizer */
+var LISTS={
+  services:{label:'Services',single:'service',fields:[
+    {k:'title',label:'Service name',max:80,req:true,ph:'e.g. Unboxing & first-impression video'},
+    {k:'description',label:'Description',max:300,type:'textarea'}],
+    empty:'No services yet',emptyHint:'List what brands can hire you for.'},
+  videos:{label:'UGC video examples',single:'video',fields:[
+    {k:'title',label:'Video title',max:100,req:true,ph:'e.g. Morning routine reel'},
+    {k:'brand',label:'Brand / product',max:80},
+    {k:'description',label:'Short description',max:300,type:'textarea'},
+    {k:'link',label:'Video link (optional)',max:300,type:'url',hint:'A public link starting with https://'},
+    {k:'thumb',label:'Cover image (optional)',type:'image',max:700000}],
+    empty:'No video examples yet',emptyHint:'Add your best UGC videos with a link and cover image.'},
+  collabs:{label:'Previous collaborations',single:'collaboration',fields:[
+    {k:'brand',label:'Brand',max:80,req:true},
+    {k:'campaign',label:'Campaign / deliverable',max:120},
+    {k:'result',label:'Result or highlight',max:240,type:'textarea'}],
+    empty:'No collaborations yet',emptyHint:'Show brands you have worked with and what you delivered.'},
+  testimonials:{label:'Testimonials',single:'testimonial',fields:[
+    {k:'quote',label:'Quote',max:400,req:true,type:'textarea'},
+    {k:'author',label:'Name',max:80},
+    {k:'role',label:'Role / company',max:100}],
+    empty:'No testimonials yet',emptyHint:'Only add real feedback from clients you have worked with.'},
+  stats:{label:'Audience statistics',single:'statistic',fields:[
+    {k:'label',label:'Label',max:60,req:true,ph:'e.g. Instagram followers'},
+    {k:'value',label:'Value',max:40,req:true,ph:'e.g. 24.5K'}],
+    empty:'No statistics yet',emptyHint:'Add followers, engagement, top locations or audience demographics.'},
+  rates:{label:'Rates',single:'rate',fields:[
+    {k:'name',label:'Package name',max:80,req:true,ph:'e.g. 1 UGC video'},
+    {k:'price',label:'Price',max:40,ph:'e.g. $250'},
+    {k:'details',label:'What’s included',max:300,type:'textarea'}],
+    empty:'No rates yet',emptyHint:'Add packages so brands know what to expect.'}
+};
+var LIST_KEYS=Object.keys(LISTS);
+
+/* ============ Validation ============ */
+function safeUrl(u){
+  u=(u||'').trim(); if(!u) return '';
+  if(/^[a-z][a-z0-9+.-]*:/i.test(u)&&!/^https?:\/\//i.test(u)) return '';
+  if(!/^https?:\/\//i.test(u)){ if(/\s/.test(u)||u.indexOf('.')<1) return ''; u='https://'+u; }
+  try{ var x=new URL(u); if(x.protocol!=='http:'&&x.protocol!=='https:') return ''; if(x.hostname.indexOf('.')<1) return ''; return x.href; }catch(e){return ''}
+}
+function isEmail(e){return /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/.test(e)}
+function handleOf(v){
+  v=(v||'').trim(); if(!v) return '';
+  var m=v.match(/^(?:https?:\/\/)?(?:www\.)?(?:instagram\.com|tiktok\.com)\/@?([^\/?#\s]+)/i);
+  if(m) v=m[1];
+  v=v.replace(/^@/,'');
+  return /^[A-Za-z0-9._]{1,30}$/.test(v)?v:'';
+}
+function fieldError(path,val){
+  val=(val||'').trim();
+  if(path==='email'&&val&&!isEmail(val)) return 'Enter a valid email address, e.g. name@example.com';
+  if((path==='instagram'||path==='tiktok')&&val&&!handleOf(val)) return 'Enter a handle like @yourname (letters, numbers, dots, underscores)';
+  if((path==='youtube'||path==='website')&&val&&!safeUrl(val)) return 'Enter a valid web address starting with https://';
+  if(path==='name'&&!val) return 'Your name is required — it appears at the top of your portfolio';
+  return '';
+}
+
+/* ============ Model ============ */
+function blankProject(){
+  var p={app:APP_ID,version:1,updatedAt:new Date().toISOString(),sampleContent:false,
+    profile:{name:'',tagline:'',image:'',bio:'',location:'',niche:'',email:'',instagram:'',tiktok:'',youtube:'',website:''},
+    meta:{audienceNote:'',ratesNote:'',ctaText:'',availability:'',responseTime:''},
+    theme:'cream',accent:'theme',
+    sections:SECTION_KEYS.map(function(k){return {key:k,visible:true,title:SECTION_DEFS[k].title}})};
+  LIST_KEYS.forEach(function(k){p[k]=[]});
+  return p;
+}
+function demoProject(){
+  var p=blankProject();
+  p.sampleContent=true;
+  p.profile={name:'Sofia Marin',tagline:'UGC creator for beauty, wellness & lifestyle brands',image:'',
+    bio:'I create scroll-stopping, authentic videos that feel like a recommendation from a friend — not an ad. With a background in retail marketing, I plan every video around a clear hook, honest demo and a call to action that converts.',
+    location:'Lisbon, Portugal',niche:'Beauty · Wellness · Home',email:'hello@example.com',instagram:'@sofia.creates',tiktok:'@sofia.creates',youtube:'',website:''};
+  p.meta={audienceNote:'Audience is primarily women 22–34 who follow skincare, self-care and slow-living content.',
+    ratesNote:'Rates are starting prices. Usage rights, whitelisting and rush delivery are quoted separately.',
+    ctaText:'Have a product that deserves a real-feeling video? Tell me about your brand and goals.',
+    availability:'Currently booking campaigns for next month',responseTime:'Replies within 1–2 business days'};
+  p.services=[
+    {id:uid(),title:'UGC product videos',description:'Vertical 9:16 videos shot on my phone with natural light, ready for TikTok, Reels and paid ads.'},
+    {id:uid(),title:'Unboxing & first impressions',description:'Honest, energetic reactions that show packaging, texture and first use.'},
+    {id:uid(),title:'Hooks & scripts',description:'Three tested hook variations per video so you can A/B test your ads.'}];
+  p.videos=[
+    {id:uid(),title:'5-minute glow routine',brand:'Sample Brand · Skincare',description:'Step-by-step routine with a strong problem/solution hook.',link:'',thumb:''},
+    {id:uid(),title:'Unboxing the self-care set',brand:'Sample Brand · Wellness',description:'Cozy unboxing with product close-ups and a clear CTA.',link:'',thumb:''},
+    {id:uid(),title:'Before & after: home refresh',brand:'Sample Brand · Home',description:'Fast-paced transformation with on-screen text.',link:'',thumb:''}];
+  p.collabs=[
+    {id:uid(),brand:'Sample Brand · Skincare',campaign:'Launch campaign — 6 UGC videos',result:'Videos reused across paid social for 3 months.'},
+    {id:uid(),brand:'Sample Brand · Wellness',campaign:'Seasonal gifting — 3 videos',result:'Delivered in 5 days with 2 hook variations each.'}];
+  p.testimonials=[
+    {id:uid(),quote:'Sample testimonial: Sofia delivered polished videos ahead of schedule and was easy to collaborate with.',author:'Sample Client',role:'Brand Manager'}];
+  p.stats=[
+    {id:uid(),label:'Instagram followers',value:'18.2K'},{id:uid(),label:'TikTok followers',value:'31.7K'},
+    {id:uid(),label:'Avg. engagement',value:'5.4%'},{id:uid(),label:'Avg. video views',value:'42K'}];
+  p.rates=[
+    {id:uid(),name:'Single UGC video',price:'$250',details:'1 video up to 45 seconds, 1 round of edits, raw footage on request.'},
+    {id:uid(),name:'Starter bundle',price:'$650',details:'3 videos with 3 hook variations each, 2 rounds of edits.'},
+    {id:uid(),name:'Monthly retainer',price:'$1,400',details:'6 videos per month, priority turnaround.'}];
+  return p;
+}
+
+function cleanImage(v){
+  v=typeof v==='string'?v:'';
+  return (/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(v)&&v.length<1500000)?v:'';
+}
+/* Coerce any object (stored or imported) into a safe project */
+function normalize(raw){
+  var p=blankProject();
+  if(!raw||typeof raw!=='object') return p;
+  var pr=raw.profile&&typeof raw.profile==='object'?raw.profile:{};
+  var caps={name:80,tagline:140,bio:1500,location:80,niche:100,email:120,instagram:60,tiktok:60,youtube:300,website:300};
+  Object.keys(caps).forEach(function(k){p.profile[k]=clip(pr[k],caps[k])});
+  p.profile.image=cleanImage(pr.image);
+  var m=raw.meta&&typeof raw.meta==='object'?raw.meta:{};
+  Object.keys(p.meta).forEach(function(k){p.meta[k]=clip(m[k],300)});
+  p.meta.audienceNote=clip(m.audienceNote,400); p.meta.ratesNote=clip(m.ratesNote,400);
+  p.theme=THEMES.some(function(t){return t.id===raw.theme})?raw.theme:'cream';
+  p.accent=ACCENTS.some(function(a){return a.id===raw.accent})?raw.accent:'theme';
+  p.sampleContent=!!raw.sampleContent;
+  p.updatedAt=typeof raw.updatedAt==='string'?raw.updatedAt.slice(0,40):p.updatedAt;
+  LIST_KEYS.forEach(function(lk){
+    var arr=Array.isArray(raw[lk])?raw[lk].slice(0,MAX_ITEMS):[];
+    p[lk]=arr.filter(function(it){return it&&typeof it==='object'}).map(function(it){
+      var o={id:clip(it.id,20).replace(/[^a-z0-9]/gi,'')||uid()};
+      LISTS[lk].fields.forEach(function(f){
+        o[f.k]=f.type==='image'?cleanImage(it[f.k]):clip(it[f.k],f.max);
+      });
+      return o;
+    });
+  });
+  if(Array.isArray(raw.sections)){
+    var seen={},out=[];
+    raw.sections.forEach(function(s){
+      if(s&&SECTION_DEFS[s.key]&&!seen[s.key]){seen[s.key]=1;out.push({key:s.key,visible:s.visible!==false,title:clip(s.title,60)||SECTION_DEFS[s.key].title})}
+    });
+    SECTION_KEYS.forEach(function(k){if(!seen[k])out.push({key:k,visible:true,title:SECTION_DEFS[k].title})});
+    p.sections=out;
+  }
+  return p;
+}
+
+/* ============ Storage ============ */
+function loadProject(){
+  try{
+    var s=localStorage.getItem(STORE_KEY);
+    if(s){ var o=JSON.parse(s); return {project:normalize(o),fresh:false}; }
+  }catch(e){}
+  return {project:demoProject(),fresh:true};
+}
+function saveProject(p){
+  p.updatedAt=new Date().toISOString();
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify(p)); return {ok:true}; }
+  catch(e){ return {ok:false,error:e}; }
+}
+
+/* ============ Portfolio renderer (used for preview AND export) ============ */
+var PORTFOLIO_CSS=[
+':root{--bg:#FBF6F0;--surface:#fff;--ink:#2B2625;--muted:#6B5F5B;--line:#E8DCD2;--accent:#97495A;--soft:#F6E3E0;--hero-bg:transparent;--hero-ink:var(--ink);--radius:18px;--head:Iowan Old Style,Palatino Linotype,Palatino,Book Antiqua,Georgia,serif;--body:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif}',
+'*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}',
+'body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+'a{color:var(--accent)}img{max-width:100%}',
+'.page{max-width:980px;margin:0 auto;padding:clamp(20px,5vw,56px) clamp(16px,4vw,40px) 40px}',
+'h1,h2,h3,blockquote{font-family:var(--head)}',
+'h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.05;margin:0 0 8px;letter-spacing:-.02em;font-weight:600}',
+'h2{font-size:clamp(1.4rem,3.4vw,1.9rem);margin:0 0 18px;font-weight:600;letter-spacing:-.01em}',
+'h3{margin:0 0 4px;font-size:1.1rem;font-weight:600}',
+'p{margin:0 0 10px}',
+'.hero{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,4vw,40px);align-items:center;background:var(--hero-bg);color:var(--hero-ink);border-radius:var(--radius);padding:clamp(0px,2vw,8px) 0 clamp(20px,4vw,36px)}',
+'.avatar{width:clamp(110px,20vw,176px);height:clamp(110px,20vw,176px);border-radius:50%;object-fit:cover;background:var(--soft);display:grid;place-items:center;font-family:var(--head);font-size:clamp(2.4rem,7vw,3.8rem);color:var(--accent);border:4px solid var(--surface);box-shadow:0 10px 30px rgba(43,38,37,.12);overflow:hidden}',
+'.avatar img{width:100%;height:100%;object-fit:cover;display:block}',
+'.eyebrow{font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}',
+'.tagline{font-size:clamp(1.05rem,2.4vw,1.3rem);color:var(--muted);margin:0 0 14px}',
+'.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;list-style:none}',
+'.chip{background:var(--soft);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:600}',
+'.bio{max-width:62ch;white-space:pre-line}',
+'.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}',
+'.btn{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;padding:10px 20px;border-radius:999px;font-weight:650;font-size:.92rem;border:2px solid var(--accent)}',
+'.btn.ghost{background:transparent;color:var(--accent)}',
+'.sec{margin-top:clamp(32px,6vw,56px);break-inside:avoid-page}',
+'.grid{display:grid;gap:16px}.g3{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}.g2{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}',
+'.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 1px 2px rgba(43,38,37,.04),0 10px 28px rgba(43,38,37,.06);break-inside:avoid}',
+'.card .sub{color:var(--accent);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:4px}',
+'.card p{color:var(--muted);font-size:.93rem}',
+'.vid{padding:0;overflow:hidden}.vid .body{padding:16px 18px 18px}',
+'.thumb{aspect-ratio:9/12;background:linear-gradient(160deg,var(--soft),#fff);display:grid;place-items:center;overflow:hidden;position:relative}',
+'.thumb img{width:100%;height:100%;object-fit:cover}',
+'.play{width:54px;height:54px;border-radius:50%;background:var(--accent);display:grid;place-items:center;opacity:.92}',
+'.play::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}',
+'.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}',
+'.stat{text-align:center;padding:20px 12px}.stat b{display:block;font-family:var(--head);font-size:clamp(1.7rem,4vw,2.3rem);color:var(--accent);line-height:1.1}.stat span{font-size:.84rem;color:var(--muted)}',
+'blockquote{margin:0;font-size:1.12rem;line-height:1.5}blockquote footer{font-family:var(--body);font-size:.85rem;color:var(--muted);margin-top:12px}',
+'.price{font-family:var(--head);font-size:1.9rem;color:var(--accent);margin:2px 0 6px}',
+'.note{color:var(--muted);font-size:.88rem;margin-top:14px}',
+'.contact{background:var(--soft);border-radius:var(--radius);padding:clamp(22px,5vw,40px);text-align:center}',
+'.contact p{max-width:52ch;margin:0 auto 14px}.contact .links{justify-content:center}.contact .meta{font-size:.88rem;color:var(--muted)}',
+'.foot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;text-align:center}',
+'.empty-page{text-align:center;padding:80px 20px;color:var(--muted)}',
+/* Theme: Blush Creator */
+'.t-blush{--bg:#FBEDEA;--soft:#F6D9D6;--line:#F0CFCB;--ink:#4A2F35;--muted:#7A5A60;--accent:#A8566A;--radius:28px}',
+'.t-blush body,body.t-blush{background:linear-gradient(180deg,#F9DEDB 0,#FBEDEA 420px,#FFF8F5 100%) fixed}',
+'.t-blush .chip{background:#fff}.t-blush h1,.t-blush h2{font-style:italic}',
+'.t-blush .hero{background:rgba(255,255,255,.55);padding:clamp(18px,4vw,36px);border:1px solid #fff}',
+'.t-blush .btn{box-shadow:0 6px 16px rgba(168,86,106,.3)}',
+/* Theme: Bold Editorial */
+'.t-editorial{--bg:#F4EDE4;--soft:#EBDDD0;--line:#2B2625;--ink:#2B2625;--muted:#4F4542;--accent:#B03A55;--radius:4px;--hero-bg:#2B2625;--hero-ink:#FBF6F0}',
+'.t-editorial h1{font-family:var(--body);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;line-height:.95}',
+'.t-editorial h2{font-family:var(--body);font-weight:900;text-transform:uppercase;letter-spacing:.02em;border-bottom:3px solid var(--ink);padding-bottom:10px;counter-increment:sec}',
+'.t-editorial .page{counter-reset:sec}',
+'.t-editorial h2::before{content:counter(sec,decimal-leading-zero) " — ";color:var(--accent)}',
+'.t-editorial .hero{padding:clamp(22px,5vw,48px)}',
+'.t-editorial .hero .eyebrow{color:#F2B8C0}.t-editorial .hero .tagline{color:#E8DCD2}.t-editorial .hero .chip{background:#F2B8C0;color:#2B2625}',
+'.t-editorial .hero .btn{background:#F2B8C0;border-color:#F2B8C0;color:#2B2625}.t-editorial .hero .btn.ghost{background:transparent;color:#F2B8C0}',
+'.t-editorial .avatar{border-radius:4px;border:3px solid #F2B8C0;color:#B03A55}',
+'.t-editorial .card{border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}',
+'.t-editorial .contact{background:var(--ink);color:#FBF6F0}.t-editorial .contact h2{border-color:#F2B8C0}.t-editorial .contact .meta,.t-editorial .contact p{color:#E8DCD2}',
+'.t-editorial .contact .btn{background:#F2B8C0;border-color:#F2B8C0;color:#2B2625}.t-editorial .contact .btn.ghost{background:transparent;color:#F2B8C0}',
+'.t-editorial .stat b{font-family:var(--body);font-weight:900}',
+'@media(max-width:560px){.hero{grid-template-columns:1fr;text-align:center;justify-items:center}.chips,.links{justify-content:center}.bio{text-align:left}}',
+'@media print{@page{margin:12mm}body{background:var(--bg)!important}.page{padding:0}.card{box-shadow:none!important}.t-editorial .card{box-shadow:none!important}.sec{break-inside:auto}.hero,.contact,.card{break-inside:avoid}.btn{border:1px solid var(--accent)}a{text-decoration:none}}'
+].join('\n');
+
+function initials(n){var w=(n||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'')[0]||'')+((w.length>1?w[w.length-1][0]:'')||'')}
+function socialLinks(pr){
+  var out=[];
+  var ig=handleOf(pr.instagram),tt=handleOf(pr.tiktok),yt=safeUrl(pr.youtube),web=safeUrl(pr.website);
+  if(ig) out.push({label:'Instagram @'+ig,href:'https://www.instagram.com/'+encodeURIComponent(ig)+'/'});
+  if(tt) out.push({label:'TikTok @'+tt,href:'https://www.tiktok.com/@'+encodeURIComponent(tt)});
+  if(yt) out.push({label:'YouTube',href:yt});
+  if(web) out.push({label:'Website',href:web});
+  return out;
+}
+function a(href,label,cls){return '<a class="btn'+(cls?' '+cls:'')+'" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>'}
+
+function renderSection(p,key,title,n){
+  var h=function(t){return '<h2>'+esc(t)+'</h2>'};
+  var pr=p.profile;
+  if(key==='intro'){
+    var chips=[pr.niche,pr.location].filter(Boolean).map(function(c){return '<li class="chip">'+esc(c)+'</li>'}).join('');
+    var soc=socialLinks(pr);
+    var links='';
+    if(isEmail(pr.email.trim())) links+=a('mailto:'+pr.email.trim(),'Email me');
+    soc.forEach(function(s){links+=a(s.href,s.label,'ghost')});
+    var av=pr.image?'<div class="avatar"><img src="'+esc(pr.image)+'" alt="Portrait of '+esc(pr.name||'the creator')+'"></div>':'<div class="avatar" aria-hidden="true">'+esc((initials(pr.name)||'B').toUpperCase())+'</div>';
+    var html='<header class="hero">'+av+'<div><div class="eyebrow">UGC Creator · Media Kit</div><h1>'+esc(pr.name||'Your Name')+'</h1>'+
+      (pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':'')+(chips?'<ul class="chips">'+chips+'</ul>':'')+
+      (pr.bio?'<p class="bio">'+esc(pr.bio)+'</p>':'')+(links?'<div class="links">'+links+'</div>':'')+'</div></header>';
+    if(p.services.length){
+      html+='<section class="sec" id="services"><h2>'+esc(title&&title!==SECTION_DEFS.intro.title?title:'Services')+'</h2><div class="grid g3">'+
+        p.services.map(function(s){return '<article class="card"><h3>'+esc(s.title)+'</h3>'+(s.description?'<p>'+esc(s.description)+'</p>':'')+'</article>'}).join('')+'</div></section>';
+    }
+    return html;
+  }
+  if(key==='videos'){
+    if(!p.videos.length) return '';
+    return '<section class="sec" id="videos">'+h(title)+'<div class="grid g3">'+p.videos.map(function(v){
+      var link=safeUrl(v.link);
+      var th=v.thumb?'<img src="'+esc(v.thumb)+'" alt="Cover image for '+esc(v.title)+'">':'<div class="play" aria-hidden="true"></div>';
+      return '<article class="card vid"><div class="thumb">'+th+'</div><div class="body">'+(v.brand?'<div class="sub">'+esc(v.brand)+'</div>':'')+'<h3>'+esc(v.title)+'</h3>'+(v.description?'<p>'+esc(v.description)+'</p>':'')+(link?'<p style="margin:8px 0 0"><a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">Watch video →</a></p>':'')+'</div></article>';
+    }).join('')+'</div></section>';
+  }
+  if(key==='collabs'){
+    if(!p.collabs.length) return '';
+    return '<section class="sec" id="collabs">'+h(title)+'<div class="grid g2">'+p.collabs.map(function(c){
+      return '<article class="card"><div class="sub">'+esc(c.campaign||'Collaboration')+'</div><h3>'+esc(c.brand)+'</h3>'+(c.result?'<p>'+esc(c.result)+'</p>':'')+'</article>';
+    }).join('')+'</div></section>';
+  }
+  if(key==='testimonials'){
+    if(!p.testimonials.length) return '';
+    return '<section class="sec" id="testimonials">'+h(title)+'<div class="grid g2">'+p.testimonials.map(function(t){
+      var who=[t.author,t.role].filter(Boolean).map(esc).join(' · ');
+      return '<figure class="card" style="margin:0"><blockquote>“'+esc(t.quote)+'”'+(who?'<footer>— '+who+'</footer>':'')+'</blockquote></figure>';
+    }).join('')+'</div></section>';
+  }
+  if(key==='stats'){
+    if(!p.stats.length&&!p.meta.audienceNote) return '';
+    return '<section class="sec" id="stats">'+h(title)+(p.stats.length?'<div class="stats">'+p.stats.map(function(s){return '<div class="card stat"><b>'+esc(s.value)+'</b><span>'+esc(s.label)+'</span></div>'}).join('')+'</div>':'')+(p.meta.audienceNote?'<p class="note">'+esc(p.meta.audienceNote)+'</p>':'')+'</section>';
+  }
+  if(key==='rates'){
+    if(!p.rates.length) return '';
+    return '<section class="sec" id="rates">'+h(title)+'<div class="grid g3">'+p.rates.map(function(r){
+      return '<article class="card"><h3>'+esc(r.name)+'</h3>'+(r.price?'<div class="price">'+esc(r.price)+'</div>':'')+(r.details?'<p>'+esc(r.details)+'</p>':'')+'</article>';
+    }).join('')+'</div>'+(p.meta.ratesNote?'<p class="note">'+esc(p.meta.ratesNote)+'</p>':'')+'</section>';
+  }
+  if(key==='contact'){
+    var em=pr.email.trim(),hasEm=isEmail(em),soc2=socialLinks(pr);
+    if(!hasEm&&!soc2.length&&!p.meta.ctaText&&!p.meta.availability&&!p.meta.responseTime) return '';
+    var btns=(hasEm?a('mailto:'+em,em):'')+soc2.map(function(s){return a(s.href,s.label,'ghost')}).join('');
+    var meta=[p.meta.availability,p.meta.responseTime].filter(Boolean).map(esc).join(' · ');
+    return '<section class="sec" id="contact"><div class="contact">'+h(title)+(p.meta.ctaText?'<p>'+esc(p.meta.ctaText)+'</p>':'')+(btns?'<div class="links">'+btns+'</div>':'')+(meta?'<p class="meta" style="margin-top:14px">'+meta+'</p>':'')+'</div></section>';
+  }
+  return '';
+}
+
+function renderPortfolio(p,opts){
+  var th=THEMES.filter(function(t){return t.id===p.theme})[0]||THEMES[0];
+  var ac=ACCENTS.filter(function(x){return x.id===p.accent})[0];
+  var accentCss='';
+  if(ac&&ac.color){
+    accentCss=':root{--accent:'+ac.color+'}.t-editorial{--accent:'+ac.color+'}';
+    if(p.theme==='editorial') accentCss+='.t-editorial .hero .eyebrow{color:#F2B8C0}.t-editorial h2::before{color:'+ac.color+'}';
+  }
+  var q=Object.assign({},p);
+  LIST_KEYS.forEach(function(lk){q[lk]=p[lk].filter(function(it){return LISTS[lk].fields.every(function(f){return !f.req||(it[f.k]||'').trim()})})});
+  var body=p.sections.filter(function(s){return s.visible}).map(function(s){return renderSection(q,s.key,s.title)}).join('');
+  if(opts&&opts.preview&&!p.profile.bio&&!p.profile.tagline&&!p.profile.email&&LIST_KEYS.every(function(k){return !p[k].length})) body+='<div class="empty-page"><h2>Your portfolio is empty</h2><p>Add your details in the editor and they will appear here.</p></div>';
+  if(!body.trim()) body='<div class="empty-page"><h2>Your portfolio is empty</h2><p>Add your details in the editor and they will appear here.</p></div>';
+  var title=(p.profile.name?p.profile.name+' — ':'')+'UGC Portfolio & Media Kit';
+  var desc=(p.profile.tagline||p.profile.bio||'UGC creator portfolio').slice(0,160);
+  return '<!doctype html>\n<html lang="en" class="t-'+esc(th.id)+'">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>'+esc(title)+'</title>\n<meta name="description" content="'+esc(desc)+'">\n<style>\n'+PORTFOLIO_CSS+'\n'+accentCss+'\n</style>\n</head>\n<body class="t-'+esc(th.id)+'">\n<main class="page">\n'+body+
+    '\n<footer class="foot">'+esc(p.profile.name||'Creator')+' · UGC Portfolio &amp; Media Kit · '+new Date().getFullYear()+'</footer>\n</main>\n</body>\n</html>';
+}
+
+/* ============ App state & UI helpers ============ */
+var P, activeTab='profile', previewTimer=null, saveTimer=null, lastY=0;
+var tabNames=['profile','content','sections','style','project'];
+
+function toast(msg,isErr){
+  var t=$('#toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':'');
+  clearTimeout(toast._t); toast._t=setTimeout(function(){t.className='toast'},isErr?5000:2800);
+}
+function confirmDialog(msg,okLabel,title){
+  return new Promise(function(res){
+    var d=$('#dlgConfirm'); $('#confirmMsg').textContent=msg; $('#confirmOk').textContent=okLabel||'Confirm';
+    $('#confirmTitle').textContent=title||'Are you sure?';
+    var done=function(){d.removeEventListener('close',done);res(d.returnValue==='ok')};
+    d.returnValue='cancel'; d.addEventListener('close',done); d.showModal();
+  });
+}
+function fld(o){
+  var id=o.id,hint=o.hint?'<div class="hint" id="'+id+'-h">'+esc(o.hint)+'</div>':'';
+  var desc=' aria-describedby="'+(o.hint?id+'-h ':'')+id+'-e"';
+  var common=' id="'+id+'" '+o.attrs+' maxlength="'+o.max+'"'+(o.ph?' placeholder="'+esc(o.ph)+'"':'')+desc+' aria-invalid="false"'+(o.req?' aria-required="true"':'');
+  var ctl=o.textarea?'<textarea rows="'+(o.rows||3)+'"'+common+'>'+esc(o.value)+'</textarea>'
+    :'<input type="'+(o.type||'text')+'"'+(o.inputmode?' inputmode="'+o.inputmode+'"':'')+' autocomplete="'+(o.auto||'off')+'" value="'+esc(o.value)+'"'+common+'>';
+  return '<div class="field"><label for="'+id+'">'+esc(o.label)+(o.req?' <span aria-hidden="true">*</span>':'')+'</label>'+ctl+hint+'<div class="error" id="'+id+'-e" aria-live="polite"></div></div>';
+}
+function showErr(el,msg){
+  el.setAttribute('aria-invalid',msg?'true':'false');
+  var e=document.getElementById(el.id+'-e'); if(e) e.textContent=msg||'';
+}
+function profField(k,label,o){
+  o=o||{};
+  return fld({id:'p-'+k,label:label,value:P.profile[k],max:o.max||100,attrs:'data-prof="'+k+'"',type:o.type,inputmode:o.inputmode,auto:o.auto,textarea:o.textarea,rows:o.rows,ph:o.ph,hint:o.hint,req:o.req});
+}
+function metaField(k,label,o){
+  return fld({id:'m-'+k,label:label,value:P.meta[k],max:o.max||300,attrs:'data-meta="'+k+'"',textarea:o.textarea,rows:o.rows,ph:o.ph,hint:o.hint});
+}
+
+/* ----- list editor ----- */
+function itemLabel(lk,it){
+  var S=LISTS[lk],first=S.fields[0],val=(it[first.k]||'').trim();
+  return val||('New '+S.single);
+}
+function missingReq(lk,it){
+  var m=LISTS[lk].fields.filter(function(f){return f.req&&!(it[f.k]||'').trim()});
+  return m.length?m[0].label.toLowerCase():'';
+}
+function listEditor(lk){
+  var S=LISTS[lk],arr=P[lk];
+  var h='<div class="card" data-listwrap="'+lk+'"><h3>'+esc(S.label)+' <span style="font-weight:400;color:var(--ink-2);font-size:.8rem">('+arr.length+'/'+MAX_ITEMS+')</span></h3>';
+  if(!arr.length) h+='<div class="empty"><b>'+esc(S.empty)+'</b>'+esc(S.emptyHint)+'</div>';
+  arr.forEach(function(it,i){
+    var miss=missingReq(lk,it);
+    h+='<div class="item" data-item="'+it.id+'"><div class="item-head"><span class="item-title" id="ih-'+it.id+'">'+esc(itemLabel(lk,it))+'</span>'+
+      '<span class="hint" id="iw-'+it.id+'" style="font-size:.72rem;color:var(--err)">'+(miss?'Add a '+esc(miss)+' to show this':'')+'</span>'+
+      '<button class="btn sm icon" type="button" data-act="move" data-dir="-1" data-list="'+lk+'" data-id="'+it.id+'" aria-label="Move '+esc(itemLabel(lk,it))+' up"'+(i===0?' disabled':'')+'>↑</button>'+
+      '<button class="btn sm icon" type="button" data-act="move" data-dir="1" data-list="'+lk+'" data-id="'+it.id+'" aria-label="Move '+esc(itemLabel(lk,it))+' down"'+(i===arr.length-1?' disabled':'')+'>↓</button>'+
+      '<button class="btn sm icon danger" type="button" data-act="remove" data-list="'+lk+'" data-id="'+it.id+'" aria-label="Remove '+esc(itemLabel(lk,it))+'">✕</button></div><div class="item-body">';
+    S.fields.forEach(function(f){
+      var id='f-'+lk+'-'+it.id+'-'+f.k;
+      if(f.type==='image'){
+        h+='<div class="field"><span class="label" style="font-size:.8rem;font-weight:650" id="'+id+'-l">'+esc(f.label)+'</span><div class="avatar-row" style="margin:4px 0 0">'+
+          '<div class="avatar" style="border-radius:12px;width:64px;height:80px" id="'+id+'-pv">'+(it[f.k]?'<img src="'+esc(it[f.k])+'" alt="">':'🖼')+'</div><div class="avatar-actions">'+
+          '<label class="btn sm" style="cursor:pointer">Choose image<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" data-imglist="'+lk+'" data-id="'+it.id+'" data-f="'+f.k+'" aria-labelledby="'+id+'-l"></label>'+
+          '<button class="btn sm" type="button" data-act="clearimg" data-list="'+lk+'" data-id="'+it.id+'" data-f="'+f.k+'"'+(it[f.k]?'':' disabled')+'>Remove</button></div></div><div class="error" id="'+id+'-e" aria-live="polite"></div></div>';
+      } else {
+        h+=fld({id:id,label:f.label,value:it[f.k],max:f.max,req:f.req,ph:f.ph,hint:f.hint,textarea:f.type==='textarea',rows:3,inputmode:f.type==='url'?'url':'',
+          attrs:'data-list="'+lk+'" data-id="'+it.id+'" data-f="'+f.k+'"'});
+      }
+    });
+    h+='</div></div>';
+  });
+  h+='<button class="btn" type="button" data-act="add" data-list="'+lk+'"'+(arr.length>=MAX_ITEMS?' disabled':'')+'>+ Add '+esc(S.single)+'</button></div>';
+  return h;
+}
+
+/* ----- panels ----- */
+function renderProfile(){
+  var pr=P.profile,h='';
+  if(P.sampleContent) h+='<div class="notice"><b>You’re looking at sample content.</b> Replace it with your own details. When you’re done, mark it as replaced so exports don’t warn you.<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" data-act="mark-replaced">I’ve replaced the sample content</button><button class="btn sm" type="button" data-act="blank">Start blank instead</button></div></div>';
+  h+='<h2>Your profile</h2><p class="lead">The essentials brands see first.</p>';
+  h+='<div class="card"><h3>Photo</h3><div class="avatar-row"><div class="avatar" id="avatarPv">'+(pr.image?'<img src="'+esc(pr.image)+'" alt="Your profile photo">':esc((initials(pr.name)||'B').toUpperCase()))+'</div><div class="avatar-actions">'+
+    '<label class="btn sm" style="cursor:pointer">Upload photo<input type="file" id="avatarFile" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" aria-label="Upload profile photo"></label>'+
+    '<button class="btn sm" type="button" data-act="clear-avatar"'+(pr.image?'':' disabled')+'>Remove</button></div></div><div class="hint" style="font-size:.75rem;color:var(--ink-2)">Photos are resized and stored only in this browser.</div><div class="error" id="avatar-e" aria-live="polite"></div></div>';
+  h+='<div class="card"><h3>About you</h3>'+profField('name','Name',{max:80,req:true,auto:'name',ph:'Your name'})+profField('tagline','Tagline',{max:140,ph:'e.g. UGC creator for beauty & wellness brands'})+
+    '<div class="row2">'+profField('niche','Niche',{max:100,ph:'e.g. Beauty · Wellness'})+profField('location','Location',{max:80,ph:'City, Country'})+'</div>'+
+    profField('bio','Bio',{max:1500,textarea:true,rows:5,hint:'Up to 1500 characters. Line breaks are kept.'})+'</div>';
+  h+='<div class="card"><h3>Contact &amp; links</h3>'+profField('email','Email',{type:'email',inputmode:'email',auto:'email',max:120,ph:'name@example.com'})+
+    '<div class="row2">'+profField('instagram','Instagram',{max:60,ph:'@yourhandle'})+profField('tiktok','TikTok',{max:60,ph:'@yourhandle'})+'</div>'+
+    profField('youtube','YouTube',{max:300,inputmode:'url',ph:'https://youtube.com/@you'})+profField('website','Website',{max:300,inputmode:'url',ph:'https://yourwebsite.com'})+'</div>';
+  h+=listEditor('services');
+  $('#panel-profile').innerHTML=h;
+  ['name','email','instagram','tiktok','youtube','website'].forEach(function(k){var el=$('#p-'+k); if(el&&pr[k]) showErr(el,fieldError(k,pr[k]))});
+}
+function renderContent(){
+  var h='<h2>Portfolio content</h2><p class="lead">Add, edit, reorder and remove items. Empty sections are hidden from your portfolio automatically.</p>';
+  h+=listEditor('videos')+listEditor('collabs')+listEditor('testimonials')+listEditor('stats');
+  h+='<div class="card"><h3>Audience note</h3>'+metaField('audienceNote','Audience description',{max:400,textarea:true,rows:3,ph:'Who follows you and why they trust you'})+'</div>';
+  h+=listEditor('rates');
+  h+='<div class="card"><h3>Rates note</h3>'+metaField('ratesNote','Note under your rates',{max:400,textarea:true,rows:3,ph:'e.g. Usage rights quoted separately'})+'</div>';
+  h+='<div class="card"><h3>Contact section</h3>'+metaField('ctaText','Invitation text',{max:300,textarea:true,rows:3,ph:'A short invitation to work together'})+
+    '<div class="row2">'+metaField('availability','Availability',{max:300,ph:'e.g. Booking next month'})+metaField('responseTime','Response time',{max:300,ph:'e.g. Replies within 2 days'})+'</div>'+
+    '<div class="hint" style="font-size:.75rem;color:var(--ink-2)">Your email and social links come from the Profile tab.</div></div>';
+  $('#panel-content').innerHTML=h;
+}
+function renderSections(){
+  var h='<h2>Sections</h2><p class="lead">Show, hide, rename and reorder the sections of your portfolio.</p>';
+  P.sections.forEach(function(s,i){
+    var id='sec-'+s.key;
+    h+='<div class="sec-row"><label class="switch"><input type="checkbox" data-sec-vis="'+s.key+'" id="'+id+'-v"'+(s.visible?' checked':'')+' aria-label="Show '+esc(SECTION_DEFS[s.key].title)+'"> Show</label>'+
+      '<div style="flex:1"><label class="sr-only" for="'+id+'-t">Heading for '+esc(SECTION_DEFS[s.key].title)+'</label><input type="text" id="'+id+'-t" data-sec-title="'+s.key+'" maxlength="60" value="'+esc(s.title)+'" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:var(--cream)"></div>'+
+      '<button class="btn sm icon" type="button" data-act="move-sec" data-dir="-1" data-key="'+s.key+'" aria-label="Move '+esc(s.title)+' up"'+(i===0?' disabled':'')+'>↑</button>'+
+      '<button class="btn sm icon" type="button" data-act="move-sec" data-dir="1" data-key="'+s.key+'" aria-label="Move '+esc(s.title)+' down"'+(i===P.sections.length-1?' disabled':'')+'>↓</button></div>';
+  });
+  h+='<div class="hint" style="font-size:.78rem;color:var(--ink-2)">“About me” also contains your services. Sections with no content stay hidden even when switched on.</div>';
+  $('#panel-sections').innerHTML=h;
+}
+function renderStyle(){
+  var h='<h2>Style</h2><p class="lead">Choose a theme. Your export keeps this look.</p><div class="card"><h3>Theme</h3><div class="theme-grid">';
+  THEMES.forEach(function(t){
+    h+='<button class="theme-opt" type="button" data-act="theme" data-id="'+t.id+'" aria-pressed="'+(P.theme===t.id)+'"><div class="sw" style="background:'+t.bg+';color:'+t.fg+'"><span style="color:'+t.ac+'">Aa</span></div><span class="n">'+esc(t.name)+'</span></button>';
+  });
+  h+='</div></div><div class="card"><h3>Accent colour</h3><div class="accent-row" role="group" aria-label="Accent colour">';
+  ACCENTS.forEach(function(x){
+    var th=THEMES.filter(function(t){return t.id===P.theme})[0];
+    var c=x.color||th.ac;
+    h+='<button class="accent" type="button" data-act="accent" data-id="'+x.id+'" style="background:'+c+'" aria-pressed="'+(P.accent===x.id)+'" aria-label="'+esc(x.name)+'" title="'+esc(x.name)+'"></button>';
+  });
+  h+='</div></div>';
+  $('#panel-style').innerHTML=h;
+}
+function renderProject(){
+  var h='<h2>Project</h2><p class="lead">Save, restore and export your work.</p>'+
+   '<div class="notice"><b>Where is my data?</b> Your project is saved automatically in <b>this browser on this device</b> (localStorage). It is not uploaded anywhere and there are no accounts. Clearing site data, using private browsing or switching browsers will lose it — <b>download a JSON backup regularly and keep it safe</b>.</div>'+
+   '<div class="card"><h3>Backup &amp; restore</h3><div class="btn-col"><button class="btn" type="button" data-act="backup">Download backup (JSON)</button><button class="btn" type="button" data-act="import">Import backup (JSON)…</button></div></div>'+
+   '<div class="card"><h3>Share your work</h3><p style="font-size:.86rem;color:var(--ink-2);margin:0 0 10px"><b>Export HTML</b> downloads one standalone file that works without this app — open it, email it, or upload it to any hosting you choose. This app does not host or publish portfolios for you.</p><div class="btn-col"><button class="btn primary" type="button" data-act="export-html">Export HTML portfolio</button><button class="btn" type="button" data-act="print">Print / Save as PDF</button></div></div>'+
+   '<div class="card"><h3>Start over</h3><div class="btn-col"><button class="btn" type="button" data-act="reset-demo">Reset to demo content</button><button class="btn danger" type="button" data-act="blank">Clear everything (blank project)</button></div></div>'+
+   '<p class="hint" id="lastSaved" style="font-size:.78rem;color:var(--ink-2)"></p>';
+  $('#panel-project').innerHTML=h; updateLastSaved();
+}
+var renderers={profile:renderProfile,content:renderContent,sections:renderSections,style:renderStyle,project:renderProject};
+function renderAll(){ tabNames.forEach(function(n){renderers[n]()}); updatePreview(); }
+function updateLastSaved(){var el=$('#lastSaved'); if(el&&P.updatedAt){try{el.textContent='Last saved locally: '+new Date(P.updatedAt).toLocaleString()}catch(e){}}}
+
+/* ============ Preview & save ============ */
+function updatePreview(){
+  var f=$('#previewFrame');
+  try{ if(f.contentWindow&&f.contentWindow.document.body) lastY=f.contentWindow.scrollY||0 }catch(e){}
+  f.onload=function(){ try{f.contentWindow.scrollTo(0,lastY)}catch(e){} };
+  f.srcdoc=renderPortfolio(P,{preview:true});
+}
+function setStatus(msg,err){var s=$('#saveStatus');s.textContent=msg;s.className='status'+(err?' err':'')}
+function doSave(){
+  var r=saveProject(P);
+  if(r.ok){ var t=new Date(); setStatus('Saved locally · '+t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})); updateLastSaved(); }
+  else { setStatus('Not saved — storage unavailable',true); toast('Couldn’t save to this browser (storage may be full or blocked). Download a JSON backup to keep your work.',true); }
+  return r.ok;
+}
+function changed(){
+  setStatus('Saving…');
+  clearTimeout(previewTimer); previewTimer=setTimeout(updatePreview,120);
+  clearTimeout(saveTimer); saveTimer=setTimeout(doSave,350);
+}
+function flushSave(){clearTimeout(saveTimer);doSave()}
+
+/* ============ Images ============ */
+function readImage(file,maxDim,square){
+  return new Promise(function(res,rej){
+    if(!file) return rej(new Error('No file chosen.'));
+    if(!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return rej(new Error('Please choose a JPG, PNG, WebP or GIF image.'));
+    if(file.size>10*1024*1024) return rej(new Error('That image is over 10 MB. Please choose a smaller one.'));
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      try{
+        var w=img.naturalWidth,h=img.naturalHeight,sx=0,sy=0,sw=w,sh=h,tw,th;
+        if(square){var s=Math.min(w,h);sx=(w-s)/2;sy=(h-s)/2;sw=sh=s;tw=th=Math.min(maxDim,s)}
+        else{var k=Math.min(1,maxDim/Math.max(w,h));tw=Math.round(w*k);th=Math.round(h*k)}
+        var c=document.createElement('canvas');c.width=tw;c.height=th;
+        var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,tw,th);x.drawImage(img,sx,sy,sw,sh,0,0,tw,th);
+        var out=c.toDataURL('image/jpeg',0.82);
+        URL.revokeObjectURL(url);
+        if(out.length>650000) return rej(new Error('That image is still too large after resizing. Try a smaller one.'));
+        res(out);
+      }catch(e){rej(new Error('Couldn’t process that image.'))}
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('That file couldn’t be read as an image.'))};
+    img.src=url;
+  });
+}
+
+/* ============ Download helpers ============ */
+function download(name,text,type){
+  var blob=new Blob([text],{type:type}),u=URL.createObjectURL(blob),a2=document.createElement('a');
+  a2.href=u;a2.download=name;a2.style.display='none';document.body.appendChild(a2);a2.click();
+  setTimeout(function(){a2.remove();URL.revokeObjectURL(u)},1500);
+}
+function slug(s){return (s||'portfolio').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'portfolio'}
+function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function firstProblem(){
+  var keys=['name','email','instagram','tiktok','youtube','website'];
+  for(var i=0;i<keys.length;i++){var m=fieldError(keys[i],P.profile[keys[i]]);if(m) return {key:keys[i],msg:m}}
+  return null;
+}
+function goToField(key){
+  selectTab('profile');
+  setTimeout(function(){var el=$('#p-'+key);if(el){el.focus();el.scrollIntoView({block:'center'})}},30);
+  if(matchMedia('(max-width:1020px)').matches) setView('edit');
+}
+function backupProject(){
+  flushSave();
+  var o=JSON.parse(JSON.stringify(P)); o.app=APP_ID; o.version=1; o.exportedAt=new Date().toISOString();
+  download('belalumi-project-'+slug(P.profile.name)+'-'+today()+'.json',JSON.stringify(o,null,2),'application/json');
+  toast('Backup downloaded. Keep it somewhere safe.');
+}
+function exportHtml(){
+  var pr=firstProblem();
+  if(pr){toast(pr.msg,true);goToField(pr.key);return Promise.resolve()}
+  var go=P.sampleContent?confirmDialog('Your portfolio still contains sample content (sample brands, testimonials and numbers). Export anyway?','Export anyway','Sample content detected'):Promise.resolve(true);
+  return go.then(function(ok){
+    if(!ok) return;
+    download(slug(P.profile.name)+'-portfolio.html',renderPortfolio(P),'text/html');
+    toast('Portfolio exported as a standalone HTML file.');
+  });
+}
+function printPortfolio(){
+  var pr=firstProblem();
+  if(pr&&pr.key==='name'){toast(pr.msg,true);goToField('name');return}
+  var f=document.createElement('iframe');
+  f.setAttribute('sandbox','allow-same-origin allow-modals');
+  f.setAttribute('aria-hidden','true'); f.tabIndex=-1; f.id='printFrame';
+  f.style.cssText='position:fixed;left:-9999px;top:0;width:900px;height:1200px;border:0;visibility:hidden';
+  f.onload=function(){
+    var w=f.contentWindow;
+    try{ w.onafterprint=function(){setTimeout(function(){f.remove()},200)}; w.focus(); w.print(); }
+    catch(e){ toast('Couldn’t open the print dialog. Use your browser’s File → Print on the exported HTML instead.',true); f.remove(); return; }
+    setTimeout(function(){if(f.parentNode)f.remove()},180000);
+  };
+  f.srcdoc=renderPortfolio(P);
+  document.body.appendChild(f);
+}
+function importFromText(text){
+  var o;
+  try{o=JSON.parse(text)}catch(e){toast('That file isn’t valid JSON, so it can’t be imported.',true);return}
+  if(!o||typeof o!=='object'||Array.isArray(o)||(o.app!==APP_ID&&!(o.profile&&typeof o.profile==='object'))){toast('That file doesn’t look like a Belalumi Creator Studio backup.',true);return}
+  confirmDialog('Importing replaces your current project in this browser. Download a backup first if you want to keep it.','Replace project','Import backup?').then(function(ok){
+    if(!ok) return;
+    P=normalize(o); P.sampleContent=!!o.sampleContent; renderAll(); flushSave(); toast('Backup imported.');
+  });
+}
+
+/* ============ Tabs & view ============ */
+function selectTab(name){
+  activeTab=name;
+  tabNames.forEach(function(n){
+    var t=$('#tab-'+n),p=$('#panel-'+n),on=n===name;
+    t.setAttribute('aria-selected',on);t.tabIndex=on?0:-1;p.hidden=!on;
+  });
+}
+function setView(v){
+  $('#workspace').dataset.view=v;
+  var b=$('#viewToggle'); b.textContent=v==='edit'?'Preview':'Edit'; b.setAttribute('aria-pressed',v==='preview');
+}
+function findItem(lk,id){return P[lk].filter(function(x){return x.id===id})[0]}
+function focusSoon(sel){setTimeout(function(){var el=$(sel);if(el)el.focus()},20)}
+function rerenderList(lk){ (lk==='services'?renderProfile:renderContent)(); }
+function move(arr,i,d){var j=i+d;if(j<0||j>=arr.length)return false;var t=arr[i];arr[i]=arr[j];arr[j]=t;return true}
+
+/* ============ Events ============ */
+var panels=$('#editorPanels');
+panels.addEventListener('input',function(e){
+  var t=e.target,d=t.dataset;
+  if(d.prof){P.profile[d.prof]=t.value;showErr(t,fieldError(d.prof,t.value));
+    if(d.prof==='name'){var av=$('#avatarPv');if(av&&!P.profile.image)av.textContent=(initials(t.value)||'B').toUpperCase()}
+    changed();
+  } else if(d.meta){P.meta[d.meta]=t.value;changed();}
+  else if(d.list&&d.f){
+    var it=findItem(d.list,d.id);if(!it)return;it[d.f]=t.value;
+    var S=LISTS[d.list],fd=S.fields.filter(function(f){return f.k===d.f})[0],msg='';
+    if(fd.type==='url'&&t.value.trim()&&!safeUrl(t.value)) msg='Enter a valid web address starting with https://';
+    else if(fd.req&&!t.value.trim()) msg='This is needed for the item to appear in your portfolio.';
+    showErr(t,msg);
+    var hd=$('#ih-'+it.id);if(hd)hd.textContent=itemLabel(d.list,it);
+    var w=$('#iw-'+it.id);if(w){var m=missingReq(d.list,it);w.textContent=m?'Add a '+m+' to show this':''}
+    changed();
+  } else if(d.secTitle){
+    var s=P.sections.filter(function(x){return x.key===d.secTitle})[0];s.title=t.value;changed();
+  }
+});
+panels.addEventListener('change',function(e){
+  var t=e.target,d=t.dataset;
+  if(d.secVis){P.sections.filter(function(x){return x.key===d.secVis})[0].visible=t.checked;changed()}
+  else if(d.secTitle&&!t.value.trim()){var s=P.sections.filter(function(x){return x.key===d.secTitle})[0];s.title=SECTION_DEFS[d.secTitle].title;t.value=s.title;changed()}
+  else if(t.id==='avatarFile'&&t.files[0]){
+    readImage(t.files[0],400,true).then(function(u){P.profile.image=u;renderProfile();changed();toast('Photo updated.')})
+      .catch(function(er){var el=$('#avatar-e');if(el)el.textContent=er.message;toast(er.message,true)});
+    t.value='';
+  } else if(d.imglist&&t.files[0]){
+    var lk=d.imglist,id=d.id,k=d.f;
+    readImage(t.files[0],720,false).then(function(u){var it=findItem(lk,id);if(it){it[k]=u;rerenderList(lk);changed();toast('Image added.')}})
+      .catch(function(er){toast(er.message,true)});
+    t.value='';
+  }
+});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var act=b.dataset.act,lk=b.dataset.list,id=b.dataset.id;
+  if(act==='add'){
+    if(P[lk].length>=MAX_ITEMS)return;
+    var it={id:uid()};LISTS[lk].fields.forEach(function(f){it[f.k]=''});
+    P[lk].push(it);rerenderList(lk);changed();
+    focusSoon('#f-'+lk+'-'+it.id+'-'+LISTS[lk].fields[0].k);
+  } else if(act==='remove'){
+    var item=findItem(lk,id);if(!item)return;
+    confirmDialog('Remove “'+itemLabel(lk,item)+'”? This can’t be undone (unless you re-import a backup).','Remove','Remove item?').then(function(ok){
+      if(!ok)return;P[lk]=P[lk].filter(function(x){return x.id!==id});rerenderList(lk);changed();toast('Removed.');
+      focusSoon('[data-listwrap="'+lk+'"] [data-act="add"]');
+    });
+  } else if(act==='move'){
+    var i=P[lk].map(function(x){return x.id}).indexOf(id);
+    if(move(P[lk],i,+b.dataset.dir)){rerenderList(lk);changed();
+      var sel='[data-act="move"][data-dir="'+b.dataset.dir+'"][data-id="'+id+'"]';
+      focusSoon(sel+':not([disabled])');
+      setTimeout(function(){var el=$(sel);if(el&&el.disabled){var o=$('[data-act="move"][data-id="'+id+'"]:not([disabled])');if(o)o.focus()}},40);}
+  } else if(act==='clearimg'){
+    var it2=findItem(lk,id);if(it2){it2[b.dataset.f]='';rerenderList(lk);changed()}
+  } else if(act==='clear-avatar'){P.profile.image='';renderProfile();changed();
+  } else if(act==='move-sec'){
+    var key=b.dataset.key,idx=P.sections.map(function(x){return x.key}).indexOf(key);
+    if(move(P.sections,idx,+b.dataset.dir)){renderSections();changed();
+      var s2='[data-act="move-sec"][data-dir="'+b.dataset.dir+'"][data-key="'+key+'"]';
+      focusSoon(s2+':not([disabled])');
+      setTimeout(function(){var el=$(s2);if(el&&el.disabled){var o=$('[data-act="move-sec"][data-key="'+key+'"]:not([disabled])');if(o)o.focus()}},40);}
+  } else if(act==='theme'){P.theme=b.dataset.id;renderStyle();changed();focusSoon('[data-act="theme"][data-id="'+b.dataset.id+'"]');
+  } else if(act==='accent'){P.accent=b.dataset.id;renderStyle();changed();focusSoon('[data-act="accent"][data-id="'+b.dataset.id+'"]');
+  } else if(act==='mark-replaced'){P.sampleContent=false;renderProfile();flushSave();toast('Sample content marked as replaced.');
+  } else if(act==='backup'){backupProject();
+  } else if(act==='import'){$('#importFile').click();
+  } else if(act==='export-html'){exportHtml();
+  } else if(act==='print'){printPortfolio();
+  } else if(act==='reset-demo'){
+    confirmDialog('Replace everything with the sample demo content? Your current work will be lost unless you have a backup.','Reset to demo','Reset to demo?').then(function(ok){
+      if(!ok)return;P=demoProject();renderAll();flushSave();toast('Demo content restored.');});
+  } else if(act==='blank'){
+    confirmDialog('Clear all content and start with a blank project? Your current work will be lost unless you have a backup.','Clear everything','Start blank?').then(function(ok){
+      if(!ok)return;var th=P.theme,ac=P.accent;P=blankProject();P.theme=th;P.accent=ac;renderAll();flushSave();toast('Blank project ready.');selectTab('profile');});
+  }
+});
+$('#tabList').addEventListener('click',function(e){var t=e.target.closest('.tab');if(t)selectTab(t.id.replace('tab-',''))});
+$('#tabList').addEventListener('keydown',function(e){
+  var i=tabNames.indexOf(activeTab),n=null;
+  if(e.key==='ArrowRight')n=(i+1)%tabNames.length;else if(e.key==='ArrowLeft')n=(i+tabNames.length-1)%tabNames.length;
+  else if(e.key==='Home')n=0;else if(e.key==='End')n=tabNames.length-1;
+  if(n!==null){e.preventDefault();selectTab(tabNames[n]);$('#tab-'+tabNames[n]).focus()}
+});
+$$('.seg [data-dev]').forEach(function(b){b.addEventListener('click',function(){
+  $$('.seg [data-dev]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+  $('#frameShell').className='frame-shell'+(b.dataset.dev==='desktop'?'':' '+b.dataset.dev);
+})});
+$('#viewToggle').addEventListener('click',function(){setView($('#workspace').dataset.view==='edit'?'preview':'edit')});
+$('#btnBackup').addEventListener('click',backupProject);
+$('#btnImport').addEventListener('click',function(){$('#importFile').click()});
+$('#btnExportHtml').addEventListener('click',exportHtml);
+$('#btnPrint').addEventListener('click',printPortfolio);
+$('#btnHelp').addEventListener('click',function(){$('#dlgWelcome').showModal()});
+$('#welcomeClose').addEventListener('click',function(){$('#dlgWelcome').close();try{localStorage.setItem(WELCOME_KEY,'1')}catch(e){}});
+$('#dlgWelcome').addEventListener('close',function(){try{localStorage.setItem(WELCOME_KEY,'1')}catch(e){}});
+$('#importFile').addEventListener('change',function(e){
+  var f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>12*1024*1024){toast('That file is too large to be a backup.',true);return}
+  var r=new FileReader();r.onload=function(){importFromText(String(r.result))};r.onerror=function(){toast('Couldn’t read that file.',true)};r.readAsText(f);
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'&&!document.querySelector('dialog[open]')){e.preventDefault();printPortfolio()}
+});
+window.addEventListener('beforeunload',function(){clearTimeout(saveTimer);saveProject(P)});
+
+/* ============ Init ============ */
+$('#previewFrame').setAttribute('sandbox','allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+var loaded=loadProject();P=loaded.project;
+renderAll();
+if(loaded.fresh){flushSave()}else{setStatus('Loaded from this browser')}
+var welcomed=false;try{welcomed=localStorage.getItem(WELCOME_KEY)==='1'}catch(e){}
+if(!welcomed){$('#dlgWelcome').showModal()}
+window.__studio={get project(){return P},renderPortfolio:renderPortfolio,normalize:normalize};
+})();
+</script>
+</body>
+</html>
